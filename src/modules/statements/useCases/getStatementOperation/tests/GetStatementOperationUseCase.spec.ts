@@ -63,4 +63,32 @@ describe("Get Statement Operation", () => {
       });
     }).rejects.toBeInstanceOf(GetStatementOperationError.StatementNotFound);
   });
+
+  it("should not be able to get statement of another user", () => {
+    expect(async () => {
+      const user = await inMemoryUsersRepository.create({
+        email: "get-statement-user@email.com",
+        name: "Statement User",
+        password: "the-pass",
+      });
+
+      const anotherUser = await inMemoryUsersRepository.create({
+        email: "another-user@email.com",
+        name: "Another User",
+        password: "the-pass",
+      });
+
+      const createdStatement = await inMemoryStatementsRepository.create({
+        amount: 125,
+        description: "The statement",
+        type: OperationType.DEPOSIT,
+        user_id: String(anotherUser.id),
+      });
+
+      await getStatementOperationUseCase.execute({
+        statement_id: String(createdStatement.id),
+        user_id: String(user.id),
+      });
+    }).rejects.toBeInstanceOf(GetStatementOperationError.StatementNotFound);
+  });
 });
